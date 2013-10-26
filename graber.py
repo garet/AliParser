@@ -8,8 +8,8 @@ import yaml
 import requests
 import psycopg2
 
-from SqlBuilder import SqlBuilder
-
+from SqlBuilder import *
+from workers import *
 
 class Model:
     def __init__(self, db, type_db, pref='tbl_', debug=True):
@@ -24,8 +24,8 @@ class Model:
                   'body': body}
         return self.__builder.Insert('allpage', values).Execute(values)
         
-    def SelectByStatus(self, type_url, status, set_type_url, set_status):
-        values = [type_url, status]
+    def SelectByStatus(self, type_work, status, set_type_url, set_status):
+        values = [type_work, status]
         result = self.__builder.Select()\
                               .From('{pref}allpage')\
                               .Where('type=%s')\
@@ -46,10 +46,8 @@ class Model:
 conn = psycopg2.connect(database="Aliexpress", user="garet", password="joker12")
 model = Model(conn, 'pg')
 
-model.SelectByStatus(0, 0, 1, 0)
+#model.SelectByStatus(0, 0, 1, 0)
 
-
-"""
 # Add firsted items
 urls = ['http://www.aliexpress.com/category/200002320/networking/1.html?needQuery=n',
         'http://www.aliexpress.com/category/100005062/tablet-pcs.html?needQuery=n&isrefine=y',
@@ -64,15 +62,30 @@ urls = ['http://www.aliexpress.com/category/200002320/networking/1.html?needQuer
         'http://www.aliexpress.com/category/702/laptops.html?needQuery=n',
         'http://www.aliexpress.com/category/200002319/computer-components.html?needQuery=n',
         'http://www.aliexpress.com/category/200002395/camera-photo.html?tracelog=allcategoriesabtestB',]
-for url in urls:
-    #try:
-        req = requests.get(url)
-        if req.status_code == 200:
-            result = model.Insert(url, '', 0, 0, req.headers, req.text)
-            if result:
-                print('Complite: {0}'.format(url))
-        else:
-            print('Status Code: {0}, Url: {1}'.format(req.status_code, url))
-    #except Exception as e :
-    #    print ('Exceptions: ', e.args)
-"""
+
+def AddFirstUrls(urls):
+    for url in urls:
+        try:
+            req = requests.get(url)
+            if req.status_code == 200:
+                result = model.Insert(url, \
+                                      '',\
+                                      TYPE_CATEGORY_0,\
+                                      STATUS_NOTHING,\
+                                      req.headers, \
+                                      req.text)
+                if result:
+                    print('Complite: {0}'.format(url))
+            else:
+                print('Status Code: {0}, Url: {1}'.format(req.status_code, url))
+        except Exception as e :
+            print ('Exceptions: ', e.args)
+            
+#def CategoryParse(data):
+
+
+url = 'http://www.aliexpress.com/category/200002395/camera-photo.html?tracelog=allcategoriesabtestB'
+req = requests.get(url)
+if req.status_code == 200:
+    obj = AliParser.CategoryParse(url, req.text, 0)
+    print(obj)
