@@ -92,6 +92,17 @@ class TestClassA(unittest.TestCase):
     def test_update_4(self):
         obj = SqlMaker()
         self.assertRaises(Exception, obj.Update, 'table', 'a1')
-
+        
+    def test_where_1(self):
+        obj = SqlMaker()
+        obj.Where('col1=%s', 'val1')
+        self.assertEqual('WHERE \rcol1=%s\r', str(obj))
+        
+    def test_where_2(self):
+        obj = SqlMaker()
+        obj.Where('col1=%s', 'val1')
+        obj.Where('col2=%s', 'val2')
+        self.assertEqual('WHERE \rcol1=%s\rAND col2=%s\r', str(obj))
+        
 if __name__ == "__main__":
     unittest.main()
